@@ -37,9 +37,49 @@
         "minLength": 1
       },
       "uniqueItems": true
+    },
+    "advertise": {
+      "$ref": "#/$defs/advertiseConfig",
+      "description": "Filter which connected MCP tools are advertised to the model. Stock omp advertises every connected tool (mode 'all' or missing). mode 'allowlist' advertises only the named tools; an empty allowlist advertises ZERO tools (fail-closed). Hidden tools stay connected for /mcp humans but never enter the model's tool list. omapilot profile uses allowlist; see docs/mcp-config.md."
     }
   },
   "$defs": {
+    "advertiseAllowlistEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["server", "tool"],
+      "properties": {
+        "server": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MCP server name as it appears in mcpServers. Matched against a connected tool's origin after omapi mcp__ name sanitizing (hyphen -> underscore, lowercase), so 'fixture-large' matches a tool minted as mcp__fixture_large_*."
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Original MCP tool name as advertised by the server (pre-sanitizing). Matched after the same mcp__ sanitizing."
+        }
+      }
+    },
+    "advertiseConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["all", "allowlist"],
+          "description": "'all' (default) advertises every connected MCP tool — stock omp behavior. 'allowlist' advertises only the entries in tools[]; empty/missing tools[] advertises ZERO tools (fail-closed)."
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/advertiseAllowlistEntry"
+          },
+          "uniqueItems": false,
+          "description": "Allowlist entries. Only consulted when mode is 'allowlist'. Entries that match no connected tool emit a warn and advertise nothing extra."
+        }
+      }
+    },
     "stringMap": {
       "type": "object",
       "additionalProperties": {
