@@ -1,0 +1,46 @@
+name: prompt-budget
+
+# PLANES G3c — fail CI when the omapilot profile's advertised-tool JSON token
+# count exceeds the frozen cap. The budget is the per-turn cost Qwen pays for
+# the advertised MCP tool schemas (compaction cannot shrink it), so allowlist
+# growth must clear the cap or be rolled back. See
+# foundry/omapilot/SPEC-planes.md G3 and
+# packages/coding-agent/scripts/prompt-budget.ts.
+
+on:
+   push:
+      branches: [main, "feat/planes"]
+      paths:
+         - "packages/coding-agent/scripts/prompt-budget.ts"
+         - "packages/coding-agent/scripts/prompt-budget.test.ts"
+         - "packages/coding-agent/src/mcp/advertise.ts"
+         - "packages/coding-agent/src/mcp/tool-bridge.ts"
+         - "packages/coding-agent/src/config/mcp-schema.json"
+         - ".omp/profiles/omapilot/agent/mcp.json"
+         - ".github/workflows/prompt-budget.yml"
+   pull_request:
+      branches: [main]
+      paths:
+         - "packages/coding-agent/scripts/prompt-budget.ts"
+         - "packages/coding-agent/scripts/prompt-budget.test.ts"
+         - "packages/coding-agent/src/mcp/advertise.ts"
+         - "packages/coding-agent/src/mcp/tool-bridge.ts"
+         - "packages/coding-agent/src/config/mcp-schema.json"
+         - ".omp/profiles/omapilot/agent/mcp.json"
+         - ".github/workflows/prompt-budget.yml"
+
+permissions:
+   contents: read
+
+jobs:
+   prompt-budget:
+      runs-on: ubuntu-22.04
+      timeout-minutes: 10
+      steps:
+         - uses: actions/checkout@v4
+         - name: "Install bun"
+           uses: ./.github/actions/bun-install
+         - name: "Prompt-budget unit tests"
+           run: bun test packages/coding-agent/scripts/prompt-budget.test.ts
+         - name: "Advertised-tool token budget (fail if over cap)"
+           run: bun packages/coding-agent/scripts/prompt-budget.ts
