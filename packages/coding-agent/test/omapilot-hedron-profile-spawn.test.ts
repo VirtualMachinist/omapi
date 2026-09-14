@@ -51,13 +51,18 @@ test("shipped omapilot hedron argv launches the hql shim via resolveStdioSpawnCo
 	expect(hedron.args?.[0]).toBe("-c");
 	const script = hedron.args?.[1] ?? "";
 	expect(script).toContain("$OMAPI_REPO");
-	expect(script).not.toContain("${OMAPI_REPO}");
+	const unexpanded = ["$", "{OMAPI_REPO}"].join("");
+	expect(script).not.toContain(unexpanded);
 	expect(script).toContain(SHIM_REL);
 
-	const spawn = await resolveStdioSpawnCommand(hedron, { platform: process.platform });
+	const spawn = await resolveStdioSpawnCommand(hedron, {
+		cwd: REPO_ROOT,
+		env: process.env,
+		platform: process.platform,
+	});
 	// Verbatim argv: if this were `bun run ${OMAPI_REPO}/...` the third token
 	// would still contain the unexpanded ${} and Bun.spawn would miss the file.
-	expect(spawn.cmd.some(tok => tok.includes("${OMAPI_REPO}"))).toBe(false);
+	expect(spawn.cmd.some(tok => tok.includes(unexpanded))).toBe(false);
 	expect(spawn.cmd[0]).toBe("sh");
 	expect(spawn.cmd[1]).toBe("-c");
 
