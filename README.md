@@ -1,40 +1,46 @@
 <p align="center">
-  <img src="https://github.com/can1357/oh-my-pi/blob/main/assets/hero.png?raw=true" alt="omp">
+  <img src="assets/omapi-mark.png" alt="omapi — oma on π" width="280">
 </p>
 
 <p align="center">
-  <strong>A coding agent with the IDE wired in.</strong>
-  <strong><a href="https://omp.sh">omp.sh</a></strong>
+  <strong>omapi</strong> — a coding agent for <strong>Omarchy</strong> and <strong>Omahedron</strong> (NixOS).
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@oh-my-pi/pi-coding-agent"><img src="https://img.shields.io/npm/v/@oh-my-pi/pi-coding-agent?style=flat&colorA=222222&colorB=CB3837" alt="npm version"></a>
-  <a href="https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-keep-E05735?style=flat&colorA=222222" alt="Changelog"></a>
-  <a href="https://github.com/can1357/oh-my-pi/actions"><img src="https://img.shields.io/github/actions/workflow/status/can1357/oh-my-pi/ci.yml?style=flat&colorA=222222&colorB=3FB950" alt="CI"></a>
-  <a href="https://github.com/can1357/oh-my-pi/blob/main/LICENSE"><img src="https://img.shields.io/github/license/can1357/oh-my-pi?style=flat&colorA=222222&colorB=58A6FF" alt="License"></a>
+  <a href="https://github.com/VirtualMachinist/omapi/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/VirtualMachinist/omapi/ci.yml?style=flat&colorA=222222&colorB=3FB950" alt="CI"></a>
+  <a href="https://github.com/VirtualMachinist/omapi/blob/main/LICENSE"><img src="https://img.shields.io/github/license/VirtualMachinist/omapi?style=flat&colorA=222222&colorB=58A6FF" alt="License"></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&colorA=222222&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-DEA584?style=flat&colorA=222222&logo=rust&logoColor=white" alt="Rust"></a>
   <a href="https://bun.sh"><img src="https://img.shields.io/badge/runtime-Bun-f472b6?style=flat&colorA=222222" alt="Bun"></a>
-  <a href="https://discord.gg/4NMW9cdXZa"><img src="https://img.shields.io/badge/Discord-5865F2?style=flat&colorA=222222&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://nixos.org"><img src="https://img.shields.io/badge/Nix-5277C3?style=flat&colorA=222222&logo=nixos&logoColor=white" alt="Nix"></a>
+  <a href="https://github.com/can1357/oh-my-pi"><img src="https://img.shields.io/badge/fork-oh--my--pi-8A2BE2?style=flat&colorA=222222" alt="fork of oh-my-pi"></a>
 </p>
 
 <p align="center">
-  Fork of <a href="https://github.com/badlogic/pi-mono">Pi</a> by <a href="https://github.com/mariozechner">@mariozechner</a> 
+  Fork of <a href="https://github.com/can1357/oh-my-pi">oh-my-pi</a> (omp), itself a fork of <a href="https://github.com/badlogic/pi-mono">Pi</a> by <a href="https://github.com/mariozechner">@mariozechner</a>.
 </p>
 
-The most capable agent surface that ships. Continuously tuned by real-world use — complete out of the box, open all the way down.
+Harness optimized for **Omahedron** — the NixOS port of Omarchy — with a clean swap when upstream Omarchy moves to Nix. Same seats, tools, and session as omp; Omahedron skills and Nix-native ops on top.
 
 **60+** providers · **31** built-in tools · **14** lsp ops · **28** dap ops · **~80k** lines of Rust core.
 
-> [!NOTE]
-> Pull requests are **temporarily open to everyone** as a trial. We previously
-> required a vouch before accepting PRs; that requirement is lifted for now
-> while we evaluate how open contributions go. Depending on the results, the
-> vouch system may return.
-
 ## Install
 
-**macOS · Linux**
+**This fork (Nix)**
+
+```sh
+nix run github:VirtualMachinist/omapi
+nix profile install github:VirtualMachinist/omapi
+```
+
+**From source**
+
+```sh
+git clone https://github.com/VirtualMachinist/omapi
+cd omapi && bun setup && bun dev
+```
+
+**Upstream omp (macOS · Linux)**
 
 ```sh
 curl -fsSL https://omp.sh/install | sh
@@ -54,24 +60,14 @@ brew install can1357/tap/omp
 bun install -g @oh-my-pi/pi-coding-agent
 ```
 
-**Nix**
-
-```sh
-# Run without installing
-nix run github:can1357/oh-my-pi
-
-# Or install into the active profile
-nix profile install github:can1357/oh-my-pi
-```
-
-Flake consumers can use `packages.<system>.omp`, `overlays.default`, `nixosModules.default`, or `homeManagerModules.default`. A Home Manager configuration can install OMP and own its settings declaratively:
+Flake consumers can use `packages.<system>.omp`, `overlays.default`, `nixosModules.default`, or `homeManagerModules.default`. A Home Manager configuration can install this fork and own its settings declaratively:
 
 ```nix
 {
-  inputs.omp.url = "github:can1357/oh-my-pi";
+  inputs.omapi.url = "github:VirtualMachinist/omapi";
 
   # In your Home Manager module:
-  imports = [ inputs.omp.homeManagerModules.default ];
+  imports = [ inputs.omapi.homeManagerModules.default ];
   programs.omp = {
     enable = true;
     settings.startup.quiet = true;
@@ -88,7 +84,7 @@ irm https://omp.sh/install.ps1 | iex
 **Pinned versions (mise)**
 
 ```sh
-mise use -g github:can1357/oh-my-pi
+mise use -g github:VirtualMachinist/omapi
 ```
 
 macOS · Linux · Windows · bun ≥ 1.3.14
@@ -668,10 +664,7 @@ For architecture and contribution guidelines, see [packages/coding-agent/DEVELOP
 
 ## Contributing
 
-Issues and pull requests are open to everyone. Open PRs are currently a
-**trial** — the previous vouch requirement is lifted while we evaluate how it
-goes, and it may return. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for
-guidelines on contributing.
+Issues and pull requests are welcome on this fork. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for upstream guidelines.
 
 ---
 
@@ -690,9 +683,7 @@ component-local notices for attribution and additional terms.
 
 _made for terminals that stay open_
 
+- [GitHub](https://github.com/VirtualMachinist/omapi)
+- [Upstream omp](https://github.com/can1357/oh-my-pi)
 - [omp.sh](https://omp.sh)
-- [GitHub](https://github.com/can1357/oh-my-pi)
-- [Changelog](https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/CHANGELOG.md)
-- [npm](https://www.npmjs.com/package/@oh-my-pi/pi-coding-agent)
-- [Discord](https://discord.gg/4NMW9cdXZa)
-- [MIT](https://github.com/can1357/oh-my-pi/blob/main/LICENSE)
+- [MIT](LICENSE)
