@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
-	"$comment": "omapilot PLANES profile. lapis: when OMAPILOT_OVERLAY_VAULT is set it is passed as `--vault <path>` (host overlay of allowlisted live files); when UNSET no --vault is passed — never Atrium-as-overlay, no Atrium default. hedron: G5a one-tool read-only hql shim; set OMAPI_REPO to the omapi clone root (unset → literal path, server fails visible, session continues); HEDRON_DB is inherited from the omapi process environment when exported.",
+	"$comment": "omapilot PLANES profile. lapis: when OMAPILOT_OVERLAY_VAULT is set it is passed as `--vault <path>` (host overlay of allowlisted live files); when UNSET no --vault is passed — never Atrium-as-overlay, no Atrium default. hedron: G5a one-tool read-only hql shim. omapi stdio spawn does not expand ${ENV} in argv, so the shim is started via sh -c (same as lapis) so $OMAPI_REPO expands in the shell. Unset OMAPI_REPO fails visible; HEDRON_DB is inherited from the omapi process environment when exported.",
 	"mcpServers": {
 		"lapis": {
 			"type": "stdio",
@@ -17,8 +17,11 @@
 		},
 		"hedron": {
 			"type": "stdio",
-			"command": "bun",
-			"args": ["run", "${OMAPI_REPO}/packages/coding-agent/src/mcp/hedron-hql-stdio.ts"]
+			"command": "sh",
+			"args": [
+				"-c",
+				"if [ -z \"$OMAPI_REPO\" ]; then echo 'OMAPI_REPO is unset; cannot start hedron hql shim' >&2; exit 1; fi; BUN=\"${OMAPI_BUN:-}\"; if [ -z \"$BUN\" ]; then BUN=$(command -v bun 2>/dev/null || true); fi; if [ -z \"$BUN\" ] && [ -x /opt/homebrew/bin/bun ]; then BUN=/opt/homebrew/bin/bun; fi; if [ -z \"$BUN\" ]; then echo 'bun not found on PATH; set OMAPI_BUN' >&2; exit 1; fi; exec \"$BUN\" run \"$OMAPI_REPO/packages/coding-agent/src/mcp/hedron-hql-stdio.ts\""
+			]
 		}
 	},
 	"advertise": {
