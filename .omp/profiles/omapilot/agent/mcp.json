@@ -1,0 +1,32 @@
+{
+	"$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+	"mcpServers": {
+		"lapis": {
+			"type": "stdio",
+			"command": "lapis",
+			"args": ["mcp"]
+		},
+		"facet": {
+			"type": "stdio",
+			"command": "facet",
+			"args": ["mcp"]
+		},
+		"hedron": {
+			"type": "stdio",
+			"command": "bun",
+			"args": ["run", "${OMAPI_REPO}/packages/coding-agent/src/mcp/hedron-hql-stdio.ts"]
+		}
+	},
+	"advertise": {
+		"mode": "allowlist",
+		"tools": [
+			{ "server": "lapis", "tool": "search" },
+			{ "server": "lapis", "tool": "neighbors" },
+			{ "server": "lapis", "tool": "tree_retrieve" },
+			{ "server": "lapis", "tool": "search_and_read" },
+			{ "server": "facet", "tool": "history_list" },
+			{ "server": "facet", "tool": "history_get" },
+			{ "server": "hedron", "tool": "hql" }
+		]
+	}
+}
