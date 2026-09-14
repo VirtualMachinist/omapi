@@ -5470,10 +5470,7 @@ export class AgentSession {
 		}
 		// Every tool arriving here is MCP-sourced (minted name + origin fields);
 		// the cast only narrows the optional origin fields the filter requires.
-		const advertised = filterAdvertisedMcpTools(
-			mcpTools as Array<CustomTool & AdvertiseFilterableTool>,
-			advertise,
-		);
+		const advertised = filterAdvertisedMcpTools(mcpTools as Array<CustomTool & AdvertiseFilterableTool>, advertise);
 		return this.#tools.refreshMCPTools(advertised);
 	}
 

@@ -44,13 +44,33 @@ const PROFILE_PATH = path.join(REPO_ROOT, ".omp", "profiles", "omapilot", "agent
 /** Live tool-name supersets, frozen from evidence/planes/g0-baseline.json. */
 const FIXTURE_TOOLS: Record<string, string[]> = {
 	lapis: [
-		"analytics", "append_to_note", "create_note", "health", "list_notes", "list_tasks",
-		"neighbors", "read_note", "resolve_link", "search", "search_and_read", "toggle_task",
-		"tree_retrieve", "vault_info",
+		"analytics",
+		"append_to_note",
+		"create_note",
+		"health",
+		"list_notes",
+		"list_tasks",
+		"neighbors",
+		"read_note",
+		"resolve_link",
+		"search",
+		"search_and_read",
+		"toggle_task",
+		"tree_retrieve",
+		"vault_info",
 	],
 	facet: [
-		"blob_get", "history_get", "history_list", "request_get", "request_list", "request_run",
-		"run_diff", "run_replay", "session_end", "session_start", "sql_query",
+		"blob_get",
+		"history_get",
+		"history_list",
+		"request_get",
+		"request_list",
+		"request_run",
+		"run_diff",
+		"run_replay",
+		"session_end",
+		"session_start",
+		"sql_query",
 	],
 	// hql is the G5 one-tool shim; the extras prove non-allowlisted tools hide.
 	hedron: ["hql", "reconcile", "store_snapshot"],
@@ -143,9 +163,7 @@ test("omapilot profile: advertised mcp__ names ⊆ allowlist", async () => {
 	await Bun.write(path.join(profileAgentDir, "mcp.json"), `${JSON.stringify(installedProfile, null, 2)}\n`);
 
 	// Mock pi-natives from the real export surface before importing the wrap.
-	const dts = await Bun.file(
-		path.join(REPO_ROOT, "packages", "natives", "native", "index.d.ts"),
-	).text();
+	const dts = await Bun.file(path.join(REPO_ROOT, "packages", "natives", "native", "index.d.ts")).text();
 	const ns: Record<string, unknown> = {};
 	for (const m of dts.matchAll(/export declare (?:class|function|const|enum|let|var) ([A-Za-z0-9_]+)/g)) {
 		ns[m[1]] = absorb;

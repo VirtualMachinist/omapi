@@ -37,9 +37,7 @@ const absorb: unknown = new Proxy(() => ({}), {
 // Bun validates named imports against the mock's keys, so mirror the real
 // export surface from the package .d.ts (values never actually run on this
 // path).
-const nativesDts = await Bun.file(
-	`${import.meta.dir}/../../../natives/native/index.d.ts`,
-).text();
+const nativesDts = await Bun.file(`${import.meta.dir}/../../../natives/native/index.d.ts`).text();
 const nativesNames = [
 	...nativesDts.matchAll(/export declare (?:class|function|const|enum|let|var) ([A-Za-z0-9_]+)/g),
 ].map(m => m[1]);
@@ -199,9 +197,7 @@ describe("filterAdvertisedMcpTools — subset", () => {
 		];
 		const kept = filterAdvertisedMcpTools(tools, { mode: "allowlist", tools: allowlist });
 		expect(kept).toHaveLength(5);
-		expect(kept.map(t => t.name).sort()).toEqual(
-			allowlist.map(e => createMCPToolName(e.server, e.tool)).sort(),
-		);
+		expect(kept.map(t => t.name).sort()).toEqual(allowlist.map(e => createMCPToolName(e.server, e.tool)).sort());
 	});
 
 	it("preserves input order of the kept tools", () => {

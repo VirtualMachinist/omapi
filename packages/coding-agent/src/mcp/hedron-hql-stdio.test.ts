@@ -21,7 +21,12 @@ import * as path from "node:path";
 
 const SHIM = path.resolve(import.meta.dir, "hedron-hql-stdio.ts");
 
-interface JsonRpcResponse { jsonrpc: string; id: unknown; result?: any; error?: any }
+interface JsonRpcResponse {
+	jsonrpc: string;
+	id: unknown;
+	result?: any;
+	error?: any;
+}
 
 /** Spawn the shim and drive a sequence of JSON-RPC requests, collecting
  * responses by id. Returns the responses and the child process so the caller

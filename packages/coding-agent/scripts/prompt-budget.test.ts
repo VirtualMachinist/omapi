@@ -24,9 +24,7 @@ const absorb: unknown = new Proxy(() => ({}), {
 	apply: () => ({}),
 });
 // scripts -> coding-agent -> packages -> packages/natives/native
-const nativesDts = await Bun.file(
-	path.resolve(import.meta.dir, "..", "..", "natives", "native", "index.d.ts"),
-).text();
+const nativesDts = await Bun.file(path.resolve(import.meta.dir, "..", "..", "natives", "native", "index.d.ts")).text();
 const nativesNames = [
 	...nativesDts.matchAll(/export declare (?:class|function|const|enum|let|var) ([A-Za-z0-9_]+)/g),
 ].map(m => m[1]);
