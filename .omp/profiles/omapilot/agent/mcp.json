@@ -1,0 +1,36 @@
+{
+	"$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+	"$comment": "omapilot PLANES profile. lapis: when OMAPILOT_OVERLAY_VAULT is set it is passed as `--vault <path>` (host overlay of allowlisted live files); when UNSET no --vault is passed — never Atrium-as-overlay, no Atrium default. hedron: G5a one-tool read-only hql shim; set OMAPI_REPO to the omapi clone root (unset → literal path, server fails visible, session continues); HEDRON_DB is inherited from the omapi process environment when exported.",
+	"mcpServers": {
+		"lapis": {
+			"type": "stdio",
+			"command": "sh",
+			"args": [
+				"-c",
+				"if [ -n \"$OMAPILOT_OVERLAY_VAULT\" ]; then exec lapis mcp --vault \"$OMAPILOT_OVERLAY_VAULT\"; else exec lapis mcp; fi"
+			]
+		},
+		"facet": {
+			"type": "stdio",
+			"command": "facet",
+			"args": ["mcp"]
+		},
+		"hedron": {
+			"type": "stdio",
+			"command": "bun",
+			"args": ["run", "${OMAPI_REPO}/packages/coding-agent/src/mcp/hedron-hql-stdio.ts"]
+		}
+	},
+	"advertise": {
+		"mode": "allowlist",
+		"tools": [
+			{ "server": "lapis", "tool": "search" },
+			{ "server": "lapis", "tool": "neighbors" },
+			{ "server": "lapis", "tool": "tree_retrieve" },
+			{ "server": "lapis", "tool": "search_and_read" },
+			{ "server": "facet", "tool": "history_list" },
+			{ "server": "facet", "tool": "history_get" },
+			{ "server": "hedron", "tool": "hql" }
+		]
+	}
+}

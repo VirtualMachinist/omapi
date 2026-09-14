@@ -22,6 +22,9 @@
 
 Harness optimized for **Omahedron** — the NixOS port of Omarchy — with a clean swap when upstream Omarchy moves to Nix. Same seats, tools, and session as omp; Omahedron skills and Nix-native ops on top.
 
+
+**omapilot profile:** Launch with `omp --profile omapilot` (or `OMP_PROFILE=omapilot`) for the PLANES harness — MCP servers `lapis`, `facet`, and `hedron` with an **advertise allowlist** so only ~8 tools enter the model (Qwen stuffs full tool JSON into the system turn). Stock omp advertises every connected tool; see [MCP advertise filter](docs/mcp-config.md#model-advertise-filter-advertise) and [runtime lifecycle](docs/mcp-runtime-lifecycle.md). Prompt contract: `packages/coding-agent/src/prompts/system/omapilot-planes.md`.
+
 **60+** providers · **31** built-in tools · **14** lsp ops · **28** dap ops · **~80k** lines of Rust core.
 
 ## Install

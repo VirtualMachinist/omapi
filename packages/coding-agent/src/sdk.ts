@@ -33,6 +33,7 @@ import type { Component } from "@oh-my-pi/pi-tui";
 import {
 	$env,
 	$flag,
+	getActiveProfile,
 	getAgentDir,
 	getModelDbPath,
 	getProjectDir,
@@ -141,12 +142,15 @@ import {
 	parseMCPToolName,
 	shouldFilterBrowserMCPForPrelude,
 } from "./mcp";
+import { type AdvertiseFilterableTool, filterAdvertisedMcpTools } from "./mcp/advertise";
+import { loadMCPAdvertiseConfig } from "./mcp/config";
 import { MCP_CONNECTION_STATUS_EVENT_CHANNEL, type McpConnectionStatusEvent } from "./mcp/startup-events";
 import { resolveMCPToolAlias } from "./mcp/tool-bridge";
 import { createSessionMemoryRuntimeContext, resolveMemoryBackend } from "./memory-backend";
 import { MEMORY_BACKEND_TOOL_NAMES } from "./memory-backend/tool-names";
 import type { MnemopiSessionState } from "./mnemopi/state";
 import mcpXdevGuidanceTemplate from "./prompts/system/mcp-xdev-guidance.md" with { type: "text" };
+import omapilotPlanesPrompt from "./prompts/system/omapilot-planes.md" with { type: "text" };
 import lateDiagnosticTemplate from "./prompts/tools/lsp-late-diagnostic.md" with { type: "text" };
 import { AgentLifecycleManager } from "./registry/agent-lifecycle";
 import { type AgentKind, type AgentRef, AgentRegistry, MAIN_AGENT_ID } from "./registry/agent-registry";
@@ -2084,8 +2088,17 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 				// MCP tools are LoadedCustomTool, extract the tool property while
 				// retaining their origins for initial registry ownership.
 				const loadedMcpTools = mcpResult.tools.map(loaded => loaded.tool);
-				customTools.push(...loadedMcpTools);
-				initialMcpManagerTools.push(...loadedMcpTools);
+				// PLANES G2: advertise-filter the initial customTools path. The same
+				// filter runs inside AgentSession.refreshMCPTools for every later
+				// refresh. Stock omp (mode "all"/missing) passes through unchanged.
+				// MCP-sourced tools carry the minted name + mcpServerName/mcpToolName
+				// origin the filter matches on; the cast only widens the element type.
+				const advertisedMcpTools = filterAdvertisedMcpTools(
+					loadedMcpTools as Array<CustomTool & AdvertiseFilterableTool>,
+					await loadMCPAdvertiseConfig(cwd),
+				);
+				customTools.push(...advertisedMcpTools);
+				initialMcpManagerTools.push(...advertisedMcpTools);
 			}
 		}
 		// Only top-level sessions own the global MCPManager. Subagents already
@@ -3171,6 +3184,7 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 			const appendParts: string[] = [];
 			if (memoryInstructions) appendParts.push(memoryInstructions);
 			if (autoLearnInstructions) appendParts.push(autoLearnInstructions);
+			if (getActiveProfile() === "omapilot") appendParts.push(omapilotPlanesPrompt.trim());
 			const projection = projectMountedMCPXdevGuidance(
 				collectMountedMCPToolRoutes(toolSession.xdev ? listXdevTools(toolSession.xdev) : []),
 			);
