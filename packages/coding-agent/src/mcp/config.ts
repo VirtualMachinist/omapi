@@ -4,11 +4,13 @@
  * Uses the capability system to load MCP servers from multiple sources.
  */
 
-import { getMCPConfigPath } from "@oh-my-pi/pi-utils";
+import * as path from "node:path";
+import { getAgentDir, getMCPConfigPath, getProjectAgentDir, logger, tryParseJson } from "@oh-my-pi/pi-utils";
 import { mcpCapability } from "../capability/mcp";
 import type { EffectiveExtensionRoots, SourceMeta } from "../capability/types";
 import type { MCPServer } from "../discovery";
 import { loadCapability } from "../discovery";
+import type { AdvertiseAllowlistEntry, AdvertiseConfig } from "./advertise";
 import { readDisabledServers, readEnabledServers } from "./config-writer";
 import type { MCPServerConfig } from "./types";
 
@@ -159,6 +161,102 @@ export async function loadAllMCPConfigs(cwd: string, options?: LoadMCPConfigsOpt
 	}
 
 	return { configs, exaApiKeys, sources };
+}
+
+// ---------------------------------------------------------------------------
+// Advertise config (PLANES G2)
+// ---------------------------------------------------------------------------
+
+/**
+ * OMP-native mcp.json candidates consulted for a top-level `advertise` block,
+ * in precedence order: project files first (nearest the work), then the active
+ * profile's agent dir (`getAgentDir()` tracks `OMP_PROFILE`). Third-party
+ * translated configs (Claude/Codex/Gemini/opencode/Cursor discoveries) are
+ * never consulted — a missing `advertise` there means `all` (stock behavior).
+ */
+function advertiseConfigCandidates(cwd: string): string[] {
+	const projectAgentDir = getProjectAgentDir(cwd);
+	const agentDir = getAgentDir();
+	return [
+		path.join(cwd, "mcp.json"),
+		path.join(cwd, ".mcp.json"),
+		path.join(projectAgentDir, "mcp.json"),
+		path.join(projectAgentDir, ".mcp.json"),
+		path.join(agentDir, "mcp.json"),
+		path.join(agentDir, ".mcp.json"),
+	];
+}
+
+/**
+ * Validate a parsed top-level `advertise` block. Malformed blocks warn and
+ * return `undefined` so the caller falls through to lower-precedence files;
+ * a valid `mode: "allowlist"` with a broken `tools[]` still fails closed at
+ * the filter (`tools` missing → zero advertised).
+ */
+function parseAdvertiseBlock(value: unknown, sourcePath: string): AdvertiseConfig | undefined {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		logger.warn("advertise: ignoring malformed advertise block (not an object)", { path: sourcePath });
+		return undefined;
+	}
+	const block = value as Record<string, unknown>;
+	const mode = block.mode;
+	if (mode !== undefined && mode !== "all" && mode !== "allowlist") {
+		logger.warn("advertise: ignoring advertise block with unknown mode", { path: sourcePath, mode });
+		return undefined;
+	}
+	let tools: AdvertiseAllowlistEntry[] | undefined;
+	if (block.tools !== undefined) {
+		if (!Array.isArray(block.tools)) {
+			logger.warn("advertise: ignoring advertise block with non-array tools", { path: sourcePath });
+			return undefined;
+		}
+		tools = [];
+		for (const entry of block.tools) {
+			const candidate = entry as Record<string, unknown> | null;
+			if (
+				typeof candidate === "object" &&
+				candidate !== null &&
+				typeof candidate.server === "string" &&
+				candidate.server.length > 0 &&
+				typeof candidate.tool === "string" &&
+				candidate.tool.length > 0
+			) {
+				tools.push({ server: candidate.server, tool: candidate.tool });
+			} else {
+				logger.warn("advertise: skipping malformed allowlist entry (needs {server, tool} strings)", {
+					path: sourcePath,
+				});
+			}
+		}
+	}
+	return { mode, tools };
+}
+
+/**
+ * Load the effective `advertise` config from OMP-native mcp.json files
+ * (project + active profile). The first file in precedence order carrying a
+ * valid top-level `advertise` block wins; there is no deep merge. Returns
+ * `undefined` when no file declares `advertise` — the filter treats that as
+ * `mode: "all"` (stock omp, no behavior change).
+ *
+ * Never throws: unreadable or malformed files are skipped so a config typo
+ * cannot break MCP tool refresh.
+ */
+export async function loadMCPAdvertiseConfig(cwd: string): Promise<AdvertiseConfig | undefined> {
+	for (const candidate of advertiseConfigCandidates(cwd)) {
+		let content: string;
+		try {
+			content = await Bun.file(candidate).text();
+		} catch {
+			continue; // missing or unreadable file
+		}
+		const data = tryParseJson<Record<string, unknown>>(content);
+		if (data === undefined || typeof data !== "object" || data === null) continue;
+		if (!("advertise" in data)) continue;
+		const parsed = parseAdvertiseBlock(data.advertise, candidate);
+		if (parsed !== undefined) return parsed;
+	}
+	return undefined;
 }
 
 /** Pattern to match Exa MCP servers */

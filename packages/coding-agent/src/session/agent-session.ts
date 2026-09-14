@@ -160,6 +160,8 @@ import type { IrcMessage } from "../irc/bus";
 import type { DaemonCompletionNotification } from "../launch/protocol";
 import { shutdownMnemopiEmbedClient } from "../mnemopi/embed-client";
 import { getMnemopiSessionState, type MnemopiSessionState, setMnemopiSessionState } from "../mnemopi/state";
+import { type AdvertiseConfig, type AdvertiseFilterableTool, filterAdvertisedMcpTools } from "../mcp/advertise";
+import { loadMCPAdvertiseConfig } from "../mcp/config";
 import { containsOrchestrate, renderOrchestrateNotice } from "../modes/orchestrate";
 import { theme } from "../modes/theme/theme";
 import { parseTurnBudget } from "../modes/turn-budget";
@@ -5599,9 +5601,29 @@ export class AgentSession {
 		return this.#tools.refreshBaseSystemPrompt(commitIf);
 	}
 
-	/** Replaces connected MCP tools and enables them immediately. */
-	refreshMCPTools(mcpTools: CustomTool[]): Promise<void> {
-		return this.#tools.refreshMCPTools(mcpTools);
+	/**
+	 * Replaces connected MCP tools and enables them immediately.
+	 *
+	 * PLANES G2: the advertise-filter applies at wrap time — here and at the
+	 * initial `customTools` path in sdk.ts — never at connect, so hidden tools
+	 * stay connected for `/mcp` humans but never reach the model. The config is
+	 * re-read per refresh so `/mcp reload` picks up `advertise` edits; a load
+	 * failure logs and falls back to stock pass-through rather than breaking
+	 * tool refresh.
+	 */
+	async refreshMCPTools(mcpTools: CustomTool[]): Promise<void> {
+		let advertise: AdvertiseConfig | undefined;
+		try {
+			advertise = await loadMCPAdvertiseConfig(this.sessionManager.getCwd());
+		} catch (error) {
+			logger.warn("advertise: config load failed; advertising all connected MCP tools", {
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+		// Every tool arriving here is MCP-sourced (minted name + origin fields);
+		// the cast only narrows the optional origin fields the filter requires.
+		const advertised = filterAdvertisedMcpTools(mcpTools as Array<CustomTool & AdvertiseFilterableTool>, advertise);
+		return this.#tools.refreshMCPTools(advertised);
 	}
 
 	/** Replaces host-owned RPC tools before the next model call. */

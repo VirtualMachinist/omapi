@@ -147,6 +147,10 @@ Server and tool name components are lowercased and sanitized to letters/undersco
 
 Both return structured tool output and convert remaining transport/tool errors into `MCP error: ...` tool content (abort remains abort).
 
+### Model advertise filter (wrap time, not connect time)
+
+MCP **connection** follows discovery (`loadAllMCPConfigs`, `enabledServers` / `disabledServers`, per-server `enabled`). **Advertise filtering** runs later, when connected tools are converted into session `customTools`: `filterAdvertisedMcpTools()` in `sdk.ts` (initial `discoverAndLoadMCPTools` merge) and `agent-session.ts` (`refreshMCPTools`). Servers stay connected and listed in `/mcp` even when their tools are filtered out; only the wrapped/advertised subset enters the model registry and the Qwen `# Tools` dump. `/mcp reload` reconnects first, then reapplies the filter on wrap.
+
 ## Refresh/reload paths (startup vs live reload)
 
 ### Initial startup path

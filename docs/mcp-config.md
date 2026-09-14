@@ -91,6 +91,7 @@ Top-level keys:
 - `mcpServers` — map of server name to server config
 - `disabledServers` — active-profile user denylist; it hides a discovered server by name regardless of the source entry's `enabled` value
 - `enabledServers` — active-profile user allowlist; it can force-enable a same-named entry whose source says `enabled: false`, but `disabledServers` still wins
+- `advertise` — optional model-facing tool filter (`mode`, `tools[]`); see [Model advertise filter](#model-advertise-filter-advertise)
 
 The config writer accepts names up to 100 characters containing letters, numbers, `_`, `-`, `.`, and `:`. The bundled schema currently omits `:` from its name pattern, so an OMP-managed namespaced plugin entry such as `cloudflare:cloudflare-api` may be valid at runtime while an editor reports a schema error.
 
@@ -441,6 +442,41 @@ The active profile's user file supplies two cross-source overrides:
 ```
 
 `/mcp enable` and `/mcp disable` update `enabled` directly when the definition is in an OMP-owned writable file. OMP does not mutate another tool's config: for such sources, those commands maintain the user-level allowlist or denylist instead and remove a conflicting stale override.
+
+
+## Model advertise filter (`advertise`)
+
+`enabledServers` / `disabledServers` control **which MCP servers connect** during discovery. The top-level `advertise` block controls **which connected tools enter the model's function-calling list** (the per-turn `# Tools` JSON in the system prompt). These layers are independent: a server can be connected and visible in `/mcp` while its tools are hidden from the model.
+
+Schema: `packages/coding-agent/src/config/mcp-schema.json` → `$defs.advertiseConfig`. Runtime filter: `filterAdvertisedMcpTools()` in `packages/coding-agent/src/mcp/advertise.ts`, applied when MCP tools are wrapped into `customTools` (initial startup and `refreshMCPTools`).
+
+| Field | Behavior |
+|---|---|
+| `mode: "all"` or missing | Stock omp — every connected MCP tool is advertised (default). |
+| `mode: "allowlist"` | Only `{ server, tool }` entries in `tools[]` are advertised, matched after the same `mcp__` name sanitizing as runtime tool names. |
+| `tools: []` or missing with `allowlist` | **Fail-closed** — zero MCP tools advertised (not "all"). |
+| Unknown allowlist entries | Warn; do not advertise extras. |
+
+Hidden tools remain **connected** for humans (`/mcp`, OAuth, reload). They must not appear in the model tool dump. Imported third-party configs without `advertise` are treated as `mode: "all"`.
+
+**omapilot profile** (`.omp/profiles/omapilot/agent/mcp.json`) uses `mode: "allowlist"` with seven tools across `lapis`, `facet`, and `hedron`. Prompt contract: `packages/coding-agent/src/prompts/system/omapilot-planes.md`. CI caps advertised-tool JSON size — see `packages/coding-agent/scripts/prompt-budget.ts`.
+
+**Host overlay vault:** When `OMAPILOT_OVERLAY_VAULT` is set, point `lapis` MCP at that **Lapis vault path** — a corpus of allowlisted *live* host files (reindexed on rebuild), not a Markdown copy vault. It is Omahedron on-box canon, **not** the Atrium operator vault and **not** `/nix/store`. Example globs: `docs/overlay.allowlist.example.json`. If unset, omit overlay args (do not silently use Atrium as the host overlay).
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": { "lapis": { "type": "stdio", "command": "lapis", "args": ["mcp"] } },
+  "advertise": {
+    "mode": "allowlist",
+    "tools": [
+      { "server": "lapis", "tool": "search" },
+      { "server": "facet", "tool": "history_list" }
+    ]
+  }
+}
+```
+
 
 ## `/mcp add` vs editing JSON directly
 

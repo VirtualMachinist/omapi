@@ -22,7 +22,15 @@ async function chromiumCanLaunch(): Promise<boolean> {
 		// launch.
 		if (process.platform !== "linux") return (await fs.stat(executable)).isFile();
 		const probe = Bun.spawnSync([executable, "--version"], { stdout: "ignore", stderr: "ignore" });
-		return probe.exitCode === 0;
+		if (probe.exitCode !== 0) return false;
+		// `--version` can succeed when a real headless launch hangs (missing
+		// display libs, sandbox). Prove launch with a short dump-dom; timeout
+		// means skip the suite instead of failing 30s later.
+		const launch = Bun.spawnSync(
+			[executable, "--headless=new", "--no-sandbox", "--disable-gpu", "--dump-dom", "about:blank"],
+			{ stdout: "ignore", stderr: "ignore", timeout: 8000 },
+		);
+		return launch.exitCode === 0;
 	} catch {
 		return false;
 	}

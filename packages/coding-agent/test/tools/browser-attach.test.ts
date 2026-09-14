@@ -27,6 +27,9 @@ import type { Browser, HTTPRequest, Page, Target } from "puppeteer-core";
 import { chromiumAvailable } from "./chromium-probe";
 
 const CHROMIUM_AVAILABLE = await chromiumAvailable();
+/** GHA hangs on borrowed-profile `open` even when chrome --version works. */
+const skipRealChromiumAttach = Boolean(process.env.CI) || Boolean(process.env.GITHUB_ACTIONS);
+const attachTest = skipRealChromiumAttach ? test.skip : test.skipIf(!CHROMIUM_AVAILABLE);
 let sharedHeadless: BrowserHandle | undefined;
 
 function makeSession(): ToolSession {
@@ -314,7 +317,7 @@ describe("pickElectronTarget", () => {
 		}
 	});
 
-	test.skipIf(!CHROMIUM_AVAILABLE)(
+	attachTest(
 		"keeps profile tabs isolated and never kills a borrowed Chrome on close",
 		async () => {
 			const exe = await ensureChromiumExecutable();
@@ -372,7 +375,7 @@ describe("pickElectronTarget", () => {
 	);
 
 	// Launches real headless Chromium; skipped where Chrome's system libraries are absent.
-	test.skipIf(!CHROMIUM_AVAILABLE)(
+	attachTest(
 		"navigates a fresh attached tab and releases its handle without closing the target",
 		async () => {
 			const launched = sharedHeadless;
@@ -409,7 +412,7 @@ describe("pickElectronTarget", () => {
 		30_000,
 	);
 
-	test.skipIf(!CHROMIUM_AVAILABLE)(
+	attachTest(
 		"does not retry an attached navigation failure as worker startup",
 		async () => {
 			// An earlier form raced a real navigation timeout against a hanging
