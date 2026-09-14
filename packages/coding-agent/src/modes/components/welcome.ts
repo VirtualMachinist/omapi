@@ -272,7 +272,7 @@ export class WelcomeComponent implements Component {
 		}
 		const dualContentWidth = boxWidth - 3; // 3 = │ + │ + │
 		const preferredLeftCol = 26;
-		const minLeftCol = 12; // logo width
+		const minLeftCol = 17; // logo width (oma-on-∏ pedestal)
 		const minRightCol = 20;
 		// Dynamic model/provider labels are truncated inside the fixed column.
 		// Letting them influence the responsive breakpoint changes the box height
@@ -483,8 +483,17 @@ export class WelcomeComponent implements Component {
 	}
 }
 
-/** Block-grid brand mark shared by the welcome and setup surfaces. */
-export const PI_LOGO = ["████████████", "   ██  ██   ", "   ██  ██   ", "   ▒▒  ██   ", "       ██   "];
+/** Block-grid brand mark shared by the welcome and setup surfaces: `oma` on `∏`. */
+export const PI_LOGO = [
+	"  ██  █   █  ██  ",
+	" █  █ ██ ██ █  █ ",
+	" █  █ █ █ █ ████ ",
+	"  ██  █   █ █  █ ",
+	"█████████████████",
+	"     ██   ██     ",
+	"     ▒▒   ██     ",
+	"          ██     ",
+];
 
 /** Multi-stop palette for the diagonal gradient. */
 const GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
