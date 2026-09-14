@@ -1,0 +1,12 @@
+{
+	"description": "Host overlay corpus — allowlisted live files indexed by Lapis (reindex on rebuild/activation). Omahedron-owned on-box vault; not the Atrium operator vault; never /nix/store or $OMARCHY_PATH. See PLANES host-overlay law.",
+	"globs": [
+		"/etc/nixos/flake.nix",
+		"/etc/nixos/configuration.nix",
+		"/etc/nixos/omarchy-packages.json",
+		"/etc/nixos/flake.lock",
+		"$HOME/.config/hypr/**",
+		"$HOME/.config/omarchy/**",
+		"/etc/omahedron/AGENTS.md"
+	]
+}

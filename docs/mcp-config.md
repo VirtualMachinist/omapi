@@ -459,6 +459,8 @@ Hidden tools remain **connected** for humans (`/mcp`, OAuth, reload). They must 
 
 **omapilot profile** (`.omp/profiles/omapilot/agent/mcp.json`) uses `mode: "allowlist"` with seven tools across `lapis`, `facet`, and `hedron`. Prompt contract: `packages/coding-agent/src/prompts/system/omapilot-planes.md`. CI caps advertised-tool JSON size — see `packages/coding-agent/scripts/prompt-budget.ts`.
 
+**Host overlay vault:** When `OMAPILOT_OVERLAY_VAULT` is set, point `lapis` MCP at that **Lapis vault path** — a corpus of allowlisted *live* host files (reindexed on rebuild), not a Markdown copy vault. It is Omahedron on-box canon, **not** the Atrium operator vault and **not** `/nix/store`. Example globs: `docs/overlay.allowlist.example.json`. If unset, omit overlay args (do not silently use Atrium as the host overlay).
+
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
