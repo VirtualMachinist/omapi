@@ -22,6 +22,12 @@ const SCENE_MARGIN_X = 4;
 const MIN_CONTENT_WIDTH = 20;
 /** Cross-dissolve duration from the splash into the first scene. */
 const SCENE_TRANSITION_MS = 420;
+/**
+ * Shortest terminal that keeps the 8-row brand mark above scene bodies. Below
+ * it the header goes compact (chrome only, no art) so short menus — e.g. the
+ * six curated theme rows — never clip on small windows. The art is unchanged.
+ */
+const SCENE_LOGO_MIN_ROWS = 26;
 
 function centerLine(line: string, width: number): string {
 	const lineWidth = visibleWidth(line);
@@ -201,7 +207,7 @@ export class SetupWizardComponent implements Component, OverlayFocusOwner {
 		const title = this.#activeScene?.title ?? scene?.title ?? "Setup";
 		const subtitle = this.#activeScene?.subtitle;
 		const contentWidth = Math.max(MIN_CONTENT_WIDTH, width - SCENE_MARGIN_X * 2);
-		const logo = gradientLogo(PI_LOGO, 0);
+		const logo = height >= SCENE_LOGO_MIN_ROWS ? gradientLogo(PI_LOGO, 0) : [];
 		const header = [
 			"",
 			...logo.map(line => centerLine(line, width)),
